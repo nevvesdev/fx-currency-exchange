@@ -13,8 +13,9 @@ Consultar taxas de câmbio de um provedor externo, armazenar o histórico, guard
 ## Tecnologias
 
 - Java 21
-- Spring Boot 4.0.8 (Web MVC, Validation, Data JPA, Data Redis, Cache, Actuator)
-- PostgreSQL 17 com Flyway
+- Spring Boot 4.0.8
+- PostgreSQL 17
+- Flyway Migrations
 - Redis 7.4
 - Maven
 
@@ -30,6 +31,7 @@ docker-compose up -d
 Health check: `http://localhost:8080/actuator/health`
 
 ## Testes
+Os testes de integração usam Testcontainers com PostgreSQL real, então o Docker precisa estar em execução.
 
 ```bash
 ./mvnw verify
@@ -46,6 +48,12 @@ Health check: `http://localhost:8080/actuator/health`
 - **Mapeamento anticorrupção**: o JSON do provedor é convertido em objetos de domínio na borda, e dados inválidos viram falha do provedor, nunca estado inválido no domínio.
 - **Falhas distintas**: taxa inexistente (`ExchangeRateNotFoundException`) e indisponibilidade do provedor (`ExchangeRateProviderException`) são tratadas de forma diferente.
 - **Timeouts explícitos** de conexão e leitura, configuráveis por variável de ambiente.
+- **Schema versionado com Flyway** e constraints no banco (formato da moeda, taxa positiva, moedas distintas); o Hibernate apenas valida o mapeamento.
+- **Entidades JPA isoladas do domínio**, com mappers explícitos nos adaptadores de persistência.
+- **Histórico de taxas idempotente**: chave única por par e instante de cotação com `INSERT ... ON CONFLICT DO NOTHING`, seguro sob concorrência.
+- **Precisão numérica explícita**: taxas em `NUMERIC(40,20)`, valores monetários em `NUMERIC(28,4)` e instantes em `TIMESTAMPTZ`.
+- **Auditabilidade**: cada conversão guarda a taxa aplicada e o instante da cotação.
+- **Testes com PostgreSQL real** via Testcontainers, com container compartilhado para preservar o cache de contexto do Spring.
 
 ## Provedor de taxas
 
@@ -68,7 +76,7 @@ FX_LIVE_TESTS=true ./mvnw -B test -Dtest=FrankfurterExchangeRateProviderLiveTest
 - [x] Fase 0: scaffold, infraestrutura local e CI
 - [x] Fase 1: domínio de câmbio
 - [x] Fase 2: adaptador do provedor externo
-- [ ] Fase 3: persistência e histórico
+- [x] Fase 3: persistência e histórico
 - [ ] Fase 4: cache Redis (Cache-Aside)
 - [ ] Fase 5: atualização automática das taxas
 - [ ] Fase 6: API REST e documentação OpenAPI
