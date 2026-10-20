@@ -28,5 +28,12 @@ management:
       probes:
         enabled: true
 
+fx:
+  provider:
+    frankfurter:
+      base-url: ${FX_PROVIDER_BASE_URL:https://api.frankfurter.dev/v1}
+      connect-timeout: ${FX_PROVIDER_CONNECT_TIMEOUT:2s}
+      read-timeout: ${FX_PROVIDER_READ_TIMEOUT:5s}
+
 server:
   port: 8080
