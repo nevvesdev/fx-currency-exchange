@@ -42,12 +42,32 @@ Health check: `http://localhost:8080/actuator/health`
 - **Domínio sem dependência de framework**: regras de câmbio em Java puro, testáveis sem subir contexto Spring.
 - **Value objects imutáveis (`record`)** com invariantes validadas na construção: objeto inválido não existe.
 - **Exceções de domínio com base comum**: a camada web as traduz para respostas HTTP sem que o domínio conheça HTTP.
+- **Porta e adaptador para o provedor de taxas**: a aplicação depende da interface `ExchangeRateProvider`; o Frankfurter é só uma implementação trocável.
+- **Mapeamento anticorrupção**: o JSON do provedor é convertido em objetos de domínio na borda, e dados inválidos viram falha do provedor, nunca estado inválido no domínio.
+- **Falhas distintas**: taxa inexistente (`ExchangeRateNotFoundException`) e indisponibilidade do provedor (`ExchangeRateProviderException`) são tratadas de forma diferente.
+- **Timeouts explícitos** de conexão e leitura, configuráveis por variável de ambiente.
+
+## Provedor de taxas
+
+As taxas vêm do [Frankfurter](https://frankfurter.dev), API gratuita e sem chave. Usamos o endpoint `v1/latest`, que expõe taxas de referência publicadas uma vez por dia útil, portanto o `quotedAt` de cada taxa é o início do dia de referência em UTC.
+
+| Variável | Padrão | Descrição |
+|---|---|---|
+| `FX_PROVIDER_BASE_URL` | `https://api.frankfurter.dev/v1` | URL base do provedor |
+| `FX_PROVIDER_CONNECT_TIMEOUT` | `2s` | Timeout de conexão |
+| `FX_PROVIDER_READ_TIMEOUT` | `5s` | Timeout de leitura |
+
+Teste opcional contra a API real:
+
+```bash
+FX_LIVE_TESTS=true ./mvnw -B test -Dtest=FrankfurterExchangeRateProviderLiveTest
+```
 
 ## Roadmap
 
 - [x] Fase 0: scaffold, infraestrutura local e CI
 - [x] Fase 1: domínio de câmbio
-- [ ] Fase 2: adaptador do provedor externo
+- [x] Fase 2: adaptador do provedor externo
 - [ ] Fase 3: persistência e histórico
 - [ ] Fase 4: cache Redis (Cache-Aside)
 - [ ] Fase 5: atualização automática das taxas
