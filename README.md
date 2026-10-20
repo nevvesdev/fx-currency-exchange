@@ -35,16 +35,28 @@ Health check: `http://localhost:8080/actuator/health`
 ./mvnw verify
 ```
 
+## Decisões de design
+
+- **`BigDecimal` para valores e taxas**: nunca `double`, evitando erros de ponto flutuante em cálculos financeiros.
+- **Arredondamento `HALF_EVEN` (bancário)** na escala padrão de cada moeda conforme ISO 4217, evitando viés acumulado.
+- **Domínio sem dependência de framework**: regras de câmbio em Java puro, testáveis sem subir contexto Spring.
+- **Value objects imutáveis (`record`)** com invariantes validadas na construção: objeto inválido não existe.
+- **Exceções de domínio com base comum**: a camada web as traduz para respostas HTTP sem que o domínio conheça HTTP.
+
 ## Roadmap
 
 - [x] Fase 0: scaffold, infraestrutura local e CI
-- [ ] Fase 1: domínio de câmbio
+- [x] Fase 1: domínio de câmbio
 - [ ] Fase 2: adaptador do provedor externo
 - [ ] Fase 3: persistência e histórico
 - [ ] Fase 4: cache Redis (Cache-Aside)
 - [ ] Fase 5: atualização automática das taxas
 - [ ] Fase 6: API REST e documentação OpenAPI
 - [ ] Fase 7: hardening, métricas e Dockerfile
+
+## 👨‍💻 Desenvolvido por
+
+João Victor · [GitHub](https://github.com/nevvesdev) · [LinkedIn](https://www.linkedin.com/in/nevvesdev/)
 
 ## Licença
 
