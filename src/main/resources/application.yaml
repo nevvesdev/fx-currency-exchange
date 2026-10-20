@@ -1,3 +1,32 @@
 spring:
   application:
     name: fx-currency-exchange
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/fxcurrency}
+    username: ${DB_USER:fx}
+    password: ${DB_PASSWORD:fx}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  cache:
+    type: redis
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+server:
+  port: 8080
