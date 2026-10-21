@@ -1,4 +1,7 @@
 package br.com.nevvesdev.fxcurrencyexchange.application.model;
 
-public class RateSource {
+public enum RateSource {
+    CACHE,
+    PROVIDER,
+    DATABASE
 }
