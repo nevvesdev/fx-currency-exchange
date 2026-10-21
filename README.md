@@ -60,6 +60,11 @@ Os testes de integração usam Testcontainers com PostgreSQL real, então o Dock
 - **Chaves versionadas** (`fx:rate:v1:USD:BRL`) e gravação atômica com TTL.
 - **Timeouts curtos do Redis** e Redis fora do health agregado, para que a queda do cache não retire a instância do balanceador.
 - **Camada de aplicação sem Spring**: o caso de uso é Java puro, testado com fakes em memória.
+- **Atualização agendada com lock distribuído (ShedLock sobre PostgreSQL)**: com várias instâncias, apenas uma executa o job por ciclo, usando o relógio do banco.
+- **Tolerância a falhas por moeda base**: a falha de uma moeda não interrompe as demais; o relatório da execução classifica o ciclo como `success`, `partial` ou `failure`.
+- **Gravação em lote no cache que aborta na primeira falha**: com o Redis indisponível, o ciclo paga um único timeout em vez de um por taxa.
+- **Métricas do job** (`fx.refresh.runs`, `fx.refresh.duration`, `fx.refresh.rates.inserted`) expostas via Micrometer.
+- **Job desligável por configuração**, o que mantém os testes de integração determinísticos.
 
 ## Provedor de taxas
 
@@ -71,6 +76,12 @@ As taxas vêm do [Frankfurter](https://frankfurter.dev), API gratuita e sem chav
 | `FX_PROVIDER_CONNECT_TIMEOUT` | `2s` | Timeout de conexão |
 | `FX_PROVIDER_READ_TIMEOUT` | `5s` | Timeout de leitura |
 | `FX_CACHE_RATE_TTL` | `10m` | TTL das taxas no cache Redis |
+| `FX_REFRESH_ENABLED` | `true` | Liga ou desliga o job de atualização automática |
+| `FX_REFRESH_BASES` | `USD,EUR,BRL` | Moedas base atualizadas a cada ciclo |
+| `FX_REFRESH_CRON` | `0 */5 * * * *` | Agenda do job (cron de 6 campos) |
+| `FX_REFRESH_ZONE` | `UTC` | Fuso horário do cron |
+| `FX_REFRESH_LOCK_AT_MOST_FOR` | `PT4M` | Tempo máximo do lock distribuído |
+| `FX_REFRESH_LOCK_AT_LEAST_FOR` | `PT30S` | Tempo mínimo do lock distribuído |
 
 Teste opcional contra a API real:
 
@@ -85,7 +96,7 @@ FX_LIVE_TESTS=true ./mvnw -B test -Dtest=FrankfurterExchangeRateProviderLiveTest
 - [x] Fase 2: adaptador do provedor externo
 - [x] Fase 3: persistência e histórico
 - [x] Fase 4: cache Redis (Cache-Aside)
-- [ ] Fase 5: atualização automática das taxas
+- [x] Fase 5: atualização automática das taxas
 - [ ] Fase 6: API REST e documentação OpenAPI
 - [ ] Fase 7: hardening, métricas e Dockerfile
 
