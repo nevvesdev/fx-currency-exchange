@@ -15,8 +15,8 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-  cache:
-    type: redis
+      timeout: ${REDIS_TIMEOUT:500ms}
+      connect-timeout: ${REDIS_CONNECT_TIMEOUT:500ms}
 
 management:
   endpoints:
@@ -27,6 +27,12 @@ management:
     health:
       probes:
         enabled: true
+  health:
+    redis:
+      enabled: false
+
+server:
+  port: 8080
 
 fx:
   provider:
@@ -34,6 +40,5 @@ fx:
       base-url: ${FX_PROVIDER_BASE_URL:https://api.frankfurter.dev/v1}
       connect-timeout: ${FX_PROVIDER_CONNECT_TIMEOUT:2s}
       read-timeout: ${FX_PROVIDER_READ_TIMEOUT:5s}
-
-server:
-  port: 8080
+  cache:
+    rate-ttl: ${FX_CACHE_RATE_TTL:10m}
