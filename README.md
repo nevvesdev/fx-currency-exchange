@@ -4,7 +4,7 @@
 
 API REST de câmbio e taxas de moedas, construída com Java 21 e Spring Boot 4, pensada para casos de uso de fintechs e bancos digitais.
 
-> **Status:** em desenvolvimento (Fase 0: scaffold do projeto).
+> **Status:** em desenvolvimento.
 
 ## Objetivo
 
@@ -49,11 +49,17 @@ Os testes de integração usam Testcontainers com PostgreSQL real, então o Dock
 - **Falhas distintas**: taxa inexistente (`ExchangeRateNotFoundException`) e indisponibilidade do provedor (`ExchangeRateProviderException`) são tratadas de forma diferente.
 - **Timeouts explícitos** de conexão e leitura, configuráveis por variável de ambiente.
 - **Schema versionado com Flyway** e constraints no banco (formato da moeda, taxa positiva, moedas distintas); o Hibernate apenas valida o mapeamento.
-- **Entidades JPA isoladas do domínio**, com mappers explícitos nos adaptadores de persistência.
+- **Entgit commit -m "test: cobre o fluxo Cache-Aside e os cenários de falha do provedor"idades JPA isoladas do domínio**, com mappers explícitos nos adaptadores de persistência.
 - **Histórico de taxas idempotente**: chave única por par e instante de cotação com `INSERT ... ON CONFLICT DO NOTHING`, seguro sob concorrência.
 - **Precisão numérica explícita**: taxas em `NUMERIC(40,20)`, valores monetários em `NUMERIC(28,4)` e instantes em `TIMESTAMPTZ`.
 - **Auditabilidade**: cada conversão guarda a taxa aplicada e o instante da cotação.
 - **Testes com PostgreSQL real** via Testcontainers, com container compartilhado para preservar o cache de contexto do Spring.
+- **Cache-Aside com porta e adaptador próprios** (sem `@Cacheable`): controle total sobre chave, TTL, formato e política de falha.
+- **Degradação graciosa**: Redis indisponível ou valor corrompido viram miss; a API segue funcionando pelo provedor, apenas mais lenta.
+- **Fallback para a última taxa do banco** quando o provedor falha, com a origem do dado (`CACHE`, `PROVIDER` ou `DATABASE`) explícita no resultado e sem cachear dado antigo.
+- **Chaves versionadas** (`fx:rate:v1:USD:BRL`) e gravação atômica com TTL.
+- **Timeouts curtos do Redis** e Redis fora do health agregado, para que a queda do cache não retire a instância do balanceador.
+- **Camada de aplicação sem Spring**: o caso de uso é Java puro, testado com fakes em memória.
 
 ## Provedor de taxas
 
@@ -64,6 +70,7 @@ As taxas vêm do [Frankfurter](https://frankfurter.dev), API gratuita e sem chav
 | `FX_PROVIDER_BASE_URL` | `https://api.frankfurter.dev/v1` | URL base do provedor |
 | `FX_PROVIDER_CONNECT_TIMEOUT` | `2s` | Timeout de conexão |
 | `FX_PROVIDER_READ_TIMEOUT` | `5s` | Timeout de leitura |
+| `FX_CACHE_RATE_TTL` | `10m` | TTL das taxas no cache Redis |
 
 Teste opcional contra a API real:
 
@@ -77,7 +84,7 @@ FX_LIVE_TESTS=true ./mvnw -B test -Dtest=FrankfurterExchangeRateProviderLiveTest
 - [x] Fase 1: domínio de câmbio
 - [x] Fase 2: adaptador do provedor externo
 - [x] Fase 3: persistência e histórico
-- [ ] Fase 4: cache Redis (Cache-Aside)
+- [x] Fase 4: cache Redis (Cache-Aside)
 - [ ] Fase 5: atualização automática das taxas
 - [ ] Fase 6: API REST e documentação OpenAPI
 - [ ] Fase 7: hardening, métricas e Dockerfile
