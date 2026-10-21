@@ -18,6 +18,7 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Set;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -108,6 +109,19 @@ class RedisExchangeRateCacheIntegrationTest {
         assertThat(cache.find(USD, BRL)).contains(usdBrl);
         assertThat(cache.find(USD, EUR)).contains(usdEur);
         assertThat(cache.find(EUR, USD)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("deve gravar várias taxas em lote com o TTL configurado")
+    void shouldStoreRatesInBulk() {
+        ExchangeRate usdBrl = rate(BRL, "5.4321");
+        ExchangeRate usdEur = rate(EUR, "0.89166");
+
+        cache.putAll(List.of(usdBrl, usdEur));
+
+        assertThat(cache.find(USD, BRL)).contains(usdBrl);
+        assertThat(cache.find(USD, EUR)).contains(usdEur);
+        assertThat(redisTemplate.getExpire(USD_BRL_KEY, TimeUnit.SECONDS)).isBetween(1L, 600L);
     }
 
     @ParameterizedTest

@@ -14,6 +14,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -56,5 +57,15 @@ class RedisExchangeRateCacheDegradationTest {
                 USD, BRL, new BigDecimal("5.4321"), Instant.parse("2026-10-20T00:00:00Z"));
 
         assertThatCode(() -> cache.put(rate)).doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("deve ignorar a gravação em lote sem lançar exceção quando o Redis está indisponível")
+    void shouldIgnoreBulkWriteWhenRedisIsDown() {
+        Instant quotedAt = Instant.parse("2026-10-20T00:00:00Z");
+        ExchangeRate usdBrl = new ExchangeRate(USD, BRL, new BigDecimal("5.4321"), quotedAt);
+        ExchangeRate usdEur = new ExchangeRate(USD, CurrencyCode.of("EUR"), new BigDecimal("0.89166"), quotedAt);
+
+        assertThatCode(() -> cache.putAll(List.of(usdBrl, usdEur))).doesNotThrowAnyException();
     }
 }
