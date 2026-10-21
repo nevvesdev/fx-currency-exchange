@@ -42,3 +42,10 @@ fx:
       read-timeout: ${FX_PROVIDER_READ_TIMEOUT:5s}
   cache:
     rate-ttl: ${FX_CACHE_RATE_TTL:10m}
+  refresh:
+    enabled: ${FX_REFRESH_ENABLED:true}
+    bases: ${FX_REFRESH_BASES:USD,EUR,BRL}
+    cron: "${FX_REFRESH_CRON:0 */5 * * * *}"
+    zone: ${FX_REFRESH_ZONE:UTC}
+    lock-at-most-for: ${FX_REFRESH_LOCK_AT_MOST_FOR:PT4M}
+    lock-at-least-for: ${FX_REFRESH_LOCK_AT_LEAST_FOR:PT30S}
