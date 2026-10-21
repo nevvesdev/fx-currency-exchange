@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 import java.time.DateTimeException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Optional;
 
 @Component
@@ -50,6 +51,18 @@ public class RedisExchangeRateCache implements ExchangeRateCache {
             redisTemplate.opsForValue().set(key, serialize(rate), ttl);
         } catch (DataAccessException e) {
             log.warn("Cache indisponível ao gravar a chave {}: {}", key, e.getMessage());
+        }
+    }
+
+    @Override
+    public void putAll(Collection<ExchangeRate> rates) {
+        try {
+            for (ExchangeRate rate : rates) {
+                redisTemplate.opsForValue().set(key(rate.base(), rate.quote()), serialize(rate), ttl);
+            }
+        } catch (DataAccessException e) {
+            log.warn("Cache indisponível ao gravar {} taxas em lote; abortando o lote: {}",
+                    rates.size(), e.getMessage());
         }
     }
 
