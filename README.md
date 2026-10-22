@@ -65,6 +65,41 @@ Os testes de integração usam Testcontainers com PostgreSQL real, então o Dock
 - **Gravação em lote no cache que aborta na primeira falha**: com o Redis indisponível, o ciclo paga um único timeout em vez de um por taxa.
 - **Métricas do job** (`fx.refresh.runs`, `fx.refresh.duration`, `fx.refresh.rates.inserted`) expostas via Micrometer.
 - **Job desligável por configuração**, o que mantém os testes de integração determinísticos.
+- **Controllers finos**: a API só traduz HTTP para casos de uso em Java puro e de volta; regras de negócio ficam na aplicação e no domínio.
+- **Valores e taxas como string decimal** nas respostas, evitando perda de precisão em clientes que leem JSON como `double`.
+- **Dinheiro nunca é arredondado em silêncio**: valor com mais casas decimais que a moeda permite é rejeitado, e há limite de 12 dígitos inteiros.
+- **Erros padronizados com `ProblemDetail` (RFC 7807)**, com lista de erros por campo na validação e sem vazar detalhes internos nos erros inesperados.
+- **Origem do dado explícita** (`CACHE`, `PROVIDER`, `DATABASE`) em cada consulta de taxa.
+- **Testes de ponta a ponta** com PostgreSQL real, provedor e cache falsos, cobrindo caminhos felizes e de erro.
+
+## API
+
+Documentação interativa (Swagger UI): `http://localhost:8080/swagger-ui.html`
+Especificação OpenAPI: `http://localhost:8080/v3/api-docs`
+
+| Método | Caminho | Descrição |
+|---|---|---|
+| GET | `/api/v1/rates/{base}/{quote}` | Taxa atual e origem do dado (`CACHE`, `PROVIDER` ou `DATABASE`) |
+| GET | `/api/v1/rates/{base}/{quote}/history?from=&to=` | Histórico por datas (padrão: 30 dias; máximo: 366) |
+| POST | `/api/v1/conversions` | Converte um valor e registra a conversão |
+| GET | `/api/v1/conversions/{id}` | Busca uma conversão |
+| GET | `/api/v1/conversions?limit=` | Conversões mais recentes (1 a 100) |
+
+Exemplos:
+
+    curl http://localhost:8080/api/v1/rates/USD/BRL
+
+    curl -X POST http://localhost:8080/api/v1/conversions \
+      -H "Content-Type: application/json" \
+      -d '{"from":"USD","to":"BRL","amount":100.00}'
+
+Valores e taxas são retornados como **strings decimais** (`"525.00"`), para não perder precisão em clientes que leem JSON como `double`. Erros seguem o formato `application/problem+json` (RFC 7807):
+
+    {
+      "title": "Requisição inválida",
+      "status": 400,
+      "detail": "O valor possui mais casas decimais do que a moeda USD permite (2)"
+    }
 
 ## Provedor de taxas
 
@@ -97,7 +132,7 @@ FX_LIVE_TESTS=true ./mvnw -B test -Dtest=FrankfurterExchangeRateProviderLiveTest
 - [x] Fase 3: persistência e histórico
 - [x] Fase 4: cache Redis (Cache-Aside)
 - [x] Fase 5: atualização automática das taxas
-- [ ] Fase 6: API REST e documentação OpenAPI
+- [x] Fase 6: API REST e documentação OpenAPI
 - [ ] Fase 7: hardening, métricas e Dockerfile
 
 ## 👨‍💻 Desenvolvido por
