@@ -1,4 +1,8 @@
 package br.com.nevvesdev.fxcurrencyexchange.application.exception;
 
-public class InvalidHistoryRangeException {
+public final class InvalidHistoryRangeException extends RuntimeException {
+
+    public InvalidHistoryRangeException(String message) {
+        super(message);
+    }
 }
