@@ -48,6 +48,12 @@ fx:
       base-url: ${FX_PROVIDER_BASE_URL:https://api.frankfurter.dev/v1}
       connect-timeout: ${FX_PROVIDER_CONNECT_TIMEOUT:2s}
       read-timeout: ${FX_PROVIDER_READ_TIMEOUT:5s}
+    circuit-breaker:
+      failure-rate-threshold: ${FX_PROVIDER_CB_FAILURE_RATE:50}
+      sliding-window-size: ${FX_PROVIDER_CB_WINDOW:10}
+      minimum-calls: ${FX_PROVIDER_CB_MIN_CALLS:5}
+      wait-in-open-state: ${FX_PROVIDER_CB_WAIT:30s}
+      half-open-calls: ${FX_PROVIDER_CB_HALF_OPEN_CALLS:3}
   cache:
     rate-ttl: ${FX_CACHE_RATE_TTL:10m}
   refresh:
