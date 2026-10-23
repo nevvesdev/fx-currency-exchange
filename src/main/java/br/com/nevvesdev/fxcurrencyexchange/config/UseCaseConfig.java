@@ -1,5 +1,6 @@
 package br.com.nevvesdev.fxcurrencyexchange.config;
 
+import br.com.nevvesdev.fxcurrencyexchange.adapter.in.metrics.MeteredGetExchangeRateUseCase;
 import br.com.nevvesdev.fxcurrencyexchange.application.port.in.ConvertCurrencyUseCase;
 import br.com.nevvesdev.fxcurrencyexchange.application.port.in.GetExchangeRateUseCase;
 import br.com.nevvesdev.fxcurrencyexchange.application.port.in.GetRateHistoryUseCase;
@@ -14,6 +15,7 @@ import br.com.nevvesdev.fxcurrencyexchange.application.service.ConvertCurrencySe
 import br.com.nevvesdev.fxcurrencyexchange.application.service.ExchangeRateQueryService;
 import br.com.nevvesdev.fxcurrencyexchange.application.service.ExchangeRateRefreshService;
 import br.com.nevvesdev.fxcurrencyexchange.application.service.RateHistoryService;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -24,8 +26,12 @@ class UseCaseConfig {
 
     @Bean
     GetExchangeRateUseCase getExchangeRateUseCase(
-            ExchangeRateCache cache, ExchangeRateProvider provider, ExchangeRateRepository repository) {
-        return new ExchangeRateQueryService(cache, provider, repository);
+            ExchangeRateCache cache,
+            ExchangeRateProvider provider,
+            ExchangeRateRepository repository,
+            MeterRegistry meterRegistry) {
+        return new MeteredGetExchangeRateUseCase(
+                new ExchangeRateQueryService(cache, provider, repository), meterRegistry);
     }
 
     @Bean
