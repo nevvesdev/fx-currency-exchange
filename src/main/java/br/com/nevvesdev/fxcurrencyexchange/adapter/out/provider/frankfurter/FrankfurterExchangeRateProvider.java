@@ -5,8 +5,6 @@ import br.com.nevvesdev.fxcurrencyexchange.application.exception.ExchangeRatePro
 import br.com.nevvesdev.fxcurrencyexchange.application.port.out.ExchangeRateProvider;
 import br.com.nevvesdev.fxcurrencyexchange.domain.model.CurrencyCode;
 import br.com.nevvesdev.fxcurrencyexchange.domain.model.ExchangeRate;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.util.UriBuilder;
@@ -16,14 +14,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
-@Component
 public class FrankfurterExchangeRateProvider implements ExchangeRateProvider {
 
     private static final String LATEST_PATH = "/latest";
 
     private final RestClient restClient;
 
-    public FrankfurterExchangeRateProvider(@Qualifier("frankfurterRestClient") RestClient restClient) {
+    public FrankfurterExchangeRateProvider(RestClient restClient) {
         this.restClient = restClient;
     }
 
