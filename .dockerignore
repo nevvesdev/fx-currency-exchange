@@ -1,0 +1,9 @@
+.git
+.github
+.idea
+*.iml
+target
+HELP.md
+README.md
+LICENSE
+docker-compose.yml
